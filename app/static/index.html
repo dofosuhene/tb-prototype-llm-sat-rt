@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TaskBuddy Prototyp</title>
+<style>
+  :root { --bg:#f6f7f9; --karte:#fff; --text:#1d2330; --leise:#667085; --akzent:#2f6fde; --ok:#1f9d55; --warn:#c2410c; --linie:#e3e6eb; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 system-ui, sans-serif; background:var(--bg); color:var(--text); }
+  main { max-width:860px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { font-size:20px; margin:0 0 4px; } h2 { font-size:16px; margin:28px 0 10px; }
+  .leise { color:var(--leise); font-size:13px; }
+  .karte { background:var(--karte); border:1px solid var(--linie); border-radius:10px; padding:14px 16px; }
+  form { display:flex; gap:8px; } input { flex:1; padding:10px 12px; font:inherit; border:1px solid var(--linie); border-radius:8px; }
+  button { font:inherit; padding:8px 14px; border-radius:8px; border:1px solid var(--akzent); background:var(--akzent); color:#fff; cursor:pointer; }
+  button.zweit { background:#fff; color:var(--akzent); } button.klein { padding:3px 9px; font-size:13px; }
+  #meldung { margin-top:10px; min-height:22px; } .warn { color:var(--warn); } .ok { color:var(--ok); }
+  .tag { margin-bottom:14px; } .tag h3 { font-size:14px; margin:0 0 6px; color:var(--leise); }
+  .block { display:flex; align-items:center; gap:10px; padding:7px 10px; border:1px solid var(--linie); border-radius:8px; background:#fff; margin-bottom:5px; }
+  .block.erledigt { opacity:.55; } .block.erledigt .titel { text-decoration:line-through; }
+  .zeit { font-variant-numeric:tabular-nums; width:105px; color:var(--leise); } .titel { flex:1; }
+  .fach { font-size:12px; padding:1px 7px; border-radius:99px; background:#eef3fd; color:var(--akzent); }
+  table { width:100%; border-collapse:collapse; } td, th { text-align:left; padding:6px 4px; border-bottom:1px solid var(--linie); font-size:14px; }
+  .balken { height:8px; background:var(--linie); border-radius:4px; overflow:hidden; width:120px; } .balken div { height:100%; background:var(--ok); }
+  #verbindung { float:right; font-size:12px; } #verbindung::before { content:"●  "; }
+</style>
+</head>
+<body>
+<main>
+  <span id="verbindung" class="warn">getrennt</span>
+  <h1>TaskBuddy Prototyp</h1>
+  <div class="leise">Freitext → Sprachmodell → Datenbank → CP-SAT → WebSocket. Öffne die Seite in zwei Tabs, um die Echtzeit-Updates zu sehen.</div>
+
+  <h2>Neuer Eintrag</h2>
+  <div class="karte">
+    <form id="formular">
+      <input id="eingabe" maxlength="300" placeholder="z. B. Mathe-Test am Freitag über Integrale" autocomplete="off" autofocus>
+      <button>Eintragen</button>
+    </form>
+    <div id="meldung" class="leise"></div>
+  </div>
+
+  <h2>Lernplan <span id="planinfo" class="leise"></span></h2>
+  <div id="plan" class="leise">Noch keine Lernblöcke.</div>
+
+  <h2>Einträge und Readiness</h2>
+  <div class="karte"><table><thead><tr><th>Termin</th><th>Eintrag</th><th>Readiness</th><th></th></tr></thead><tbody id="eintraege"></tbody></table></div>
+</main>
+<script>
+const tage = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+const fmtTag = d => `${tage[d.getDay()]} ${d.getDate()}.${d.getMonth()+1}.`;
+const fmtZeit = d => d.toTimeString().slice(0,5);
+let offeneRueckfrage = null;   // vorheriger Text, falls das Backend nachfragt
+
+function zeichnen(z) {
+  const info = {optimal:"optimal", gueltig:"gültig (Zeitlimit erreicht)", leer:"", unloesbar:"⚠ nicht alles schaffbar, alter Plan bleibt", unbekannt:"⚠ keine Lösung gefunden"};
+  let text = info[z.plan.status] ?? z.plan.status;
+  if (z.plan.max_tageslast_min) text += ` · höchste Tageslast ${z.plan.max_tageslast_min} min`;
+  if (z.plan.zu_knapp?.length) text += ` · zu knapp: ${z.plan.zu_knapp.map(id => z.eintraege.find(e => e.id===id)?.titel ?? id).join(", ")}`;
+  document.getElementById("planinfo").textContent = text ? "· " + text : "";
+
+  const plan = document.getElementById("plan");
+  if (!z.bloecke.length) { plan.textContent = "Noch keine Lernblöcke."; plan.className = "leise"; }
+  else {
+    const nachTag = {};
+    for (const b of z.bloecke) { const k = fmtTag(new Date(b.start)); (nachTag[k] ??= []).push(b); }
+    plan.className = ""; plan.innerHTML = "";
+    for (const [tag, liste] of Object.entries(nachTag)) {
+      const div = document.createElement("div"); div.className = "tag";
+      div.innerHTML = `<h3>${tag}</h3>`;
+      for (const b of liste) {
+        const zeile = document.createElement("div");
+        zeile.className = "block" + (b.erledigt ? " erledigt" : "");
+        zeile.innerHTML = `<span class="zeit">${fmtZeit(new Date(b.start))}–${fmtZeit(new Date(b.ende))}</span>
+          <span class="fach"></span><span class="titel"></span>
+          <button class="klein zweit">${b.erledigt ? "rückgängig" : "erledigt"}</button>`;
+        zeile.querySelector(".fach").textContent = b.fach;
+        zeile.querySelector(".titel").textContent = b.titel;
+        zeile.querySelector("button").onclick = () => fetch(`/lernbloecke/${b.id}/erledigt`, {method:"POST"});
+        div.appendChild(zeile);
+      }
+      plan.appendChild(div);
+    }
+  }
+
+  const tb = document.getElementById("eintraege"); tb.innerHTML = "";
+  for (const e of z.eintraege) {
+    const tr = document.createElement("tr"); const t = new Date(e.termin);
+    tr.innerHTML = `<td>${fmtTag(t)} ${fmtZeit(t)}</td><td><span class="fach"></span> <span class="titel"></span> <span class="leise">(${e.typ === "Pruefung" ? "Prüfung" : "Aufgabe"})</span></td>
+      <td><div class="balken"><div style="width:${Math.round(e.score*100)}%"></div></div><span class="leise">${Math.round(e.score*100)} % · ${e.erledigt_min}/${e.lernminuten} min</span></td>
+      <td><button class="klein zweit">löschen</button></td>`;
+    tr.querySelector(".fach").textContent = e.fach; tr.querySelector(".titel").textContent = e.titel;
+    tr.querySelector("button").onclick = () => fetch(`/eintraege/${e.id}`, {method:"DELETE"});
+    tb.appendChild(tr);
+  }
+}
+
+document.getElementById("formular").onsubmit = async (ev) => {
+  ev.preventDefault();
+  const feld = document.getElementById("eingabe"), meldung = document.getElementById("meldung");
+  const text = offeneRueckfrage ? `${offeneRueckfrage}, ${feld.value}` : feld.value;
+  if (!feld.value.trim()) return;
+  meldung.className = "leise"; meldung.textContent = "Wird verarbeitet …";
+  const r = await fetch("/freitext", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({text})});
+  const d = await r.json();
+  feld.value = "";
+  if (!r.ok) { meldung.className = "warn"; meldung.textContent = d.detail?.[0]?.msg ?? d.detail ?? "Fehler"; offeneRueckfrage = null; return; }
+  if (d.status === "rueckfrage") { offeneRueckfrage = text; meldung.className = "warn"; meldung.textContent = d.frage; feld.placeholder = "Antwort eingeben …"; return; }
+  offeneRueckfrage = null; feld.placeholder = "z. B. Mathe-Test am Freitag über Integrale";
+  if (d.status === "irrelevant") { meldung.className = "leise"; meldung.textContent = d.meldung; return; }
+  meldung.className = "ok"; meldung.textContent = "Eingetragen und neu geplant.";
+};
+
+function verbinden() {
+  const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
+  const anzeige = document.getElementById("verbindung");
+  ws.onopen = () => { anzeige.textContent = "live"; anzeige.className = "ok"; };
+  ws.onmessage = (ev) => { const n = JSON.parse(ev.data); if (n.typ === "update") zeichnen(n); };
+  ws.onclose = () => { anzeige.textContent = "getrennt"; anzeige.className = "warn"; setTimeout(verbinden, 2000); };
+}
+verbinden();
+</script>
+</body>
+</html>
