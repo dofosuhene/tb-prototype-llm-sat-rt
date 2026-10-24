@@ -8,7 +8,7 @@ import json
 import re
 from typing import Literal, Protocol
 
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, BadRequestError
 from pydantic import BaseModel
 
 from .config import FACH_ALIASE, OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
@@ -43,7 +43,7 @@ SCHEMA = {
             "subject": {"type": ["string", "null"]},
             "title": {"type": ["string", "null"]},
             "raw_date_expression": {"type": ["string", "null"]},
-            "missing_fields": {"type": "array", "items": {"type": "string"}},
+            "missing_fields": {"type": "array", "items": {"type": "string", "enum": ["fach", "typ", "termin"]}},
         }}},
 }
 
@@ -58,12 +58,16 @@ class OpenAiExtraktor:
         self.model = model
 
     async def extrahieren(self, text: str) -> Extraktion:
-        antwort = await self.client.chat.completions.create(
-            model=self.model,
-            response_format=SCHEMA,
-            temperature=0,
-            messages=[{"role": "system", "content": ANWEISUNG}, {"role": "user", "content": text}],
-        )
+        try:
+            antwort = await self.client.chat.completions.create(
+                model=self.model,
+                response_format=SCHEMA,
+                temperature=0,
+                messages=[{"role": "system", "content": ANWEISUNG}, {"role": "user", "content": text}],
+            )
+        except BadRequestError:
+            return Extraktion(is_relevant=False, entry_type=None, subject=None, title=None,
+                              raw_date_expression=None, missing_fields=[])
         return Extraktion.model_validate(json.loads(antwort.choices[0].message.content))
 
 

@@ -27,12 +27,25 @@ def test_bloecke_vor_termin_und_ohne_ueberschneidung():
         assert b.start >= JETZT
 
 
-def test_lernbuero_nur_fuer_eigenes_fach():
-    # Mittwoch-Lernbuero ist Englisch: ein Mathe-Block darf dort nie liegen
-    e = planen([Aufgabe(1, "Mathematik", 450, datetime(2026, 10, 19, 8))], JETZT)
+def test_lernbuero_nur_ein_fach_pro_stunde():
+    aufgaben = [Aufgabe(1, "Mathematik", 135, datetime(2026, 10, 15, 8)),
+                Aufgabe(2, "Englisch", 135, datetime(2026, 10, 15, 8)),
+                Aufgabe(3, "SEW", 135, datetime(2026, 10, 15, 8))]
+    e = planen(aufgaben, datetime(2026, 10, 12, 8))
+    assert e.status in ("optimal", "gueltig")
+    fach = {a.id: a.fach for a in aufgaben}
+    im_lernbuero = {}
     for b in e.bloecke:
-        if b.start.weekday() == 2:
-            assert b.start.hour >= 15
+        if b.start.weekday() < 4 and b.start.hour < 15:
+            im_lernbuero.setdefault(b.start.date(), set()).add(fach[b.aufgabe_id])
+    assert im_lernbuero
+    assert all(len(f) == 1 for f in im_lernbuero.values())
+
+
+def test_lernbuero_nicht_fuer_fremdes_fach():
+    e = planen([Aufgabe(1, "Geschichte", 450, datetime(2026, 10, 19, 8))], datetime(2026, 10, 12, 8))
+    assert e.bloecke
+    assert all(b.start.weekday() >= 4 or b.start.hour >= 15 for b in e.bloecke)
 
 
 def test_unloesbar_meldet_zu_knappe_aufgabe():
@@ -49,4 +62,4 @@ def test_last_wird_verteilt():
 
 def test_lernfenster_beginnen_nicht_vor_jetzt():
     f = lernfenster(datetime(2026, 10, 12, 16, 7), datetime(2026, 10, 13, 0))
-    assert f[0][0] == datetime(2026, 10, 12, 16, 15)
+    assert f[0][0] == datetime(2026, 10, 12, 16, 10)

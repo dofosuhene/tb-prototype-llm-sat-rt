@@ -4,7 +4,8 @@ Reine Funktion ohne Datenbank: Aufgaben rein, Lernbloecke raus. So laesst sie si
 einzeln testen und spaeter in einem eigenen Thread oder Worker ausfuehren.
 
 Regeln:
-  - Bloecke liegen nur in Lernfenstern (freie Zeit oder Lernbuero des eigenen Fachs)
+  - Bloecke liegen nur in Lernfenstern (freie Zeit oder Lernbuero)
+  - in einer Lernbuero-Stunde wird genau ein angebotenes Fach gelernt
   - Bloecke ueberschneiden sich nicht
   - jeder Block endet mindestens PUFFER_MIN vor dem Termin
 Ziel: die hoechste Tagesbelastung so klein wie moeglich, danach moeglichst frueh lernen.
@@ -51,8 +52,8 @@ def _uhrzeit(tag: datetime, hhmm: str) -> datetime:
     return tag.replace(hour=h, minute=m, second=0, microsecond=0)
 
 
-def lernfenster(von: datetime, bis: datetime) -> list[tuple[datetime, datetime, str | None]]:
-    """Alle Lernfenster zwischen von und bis, auf das 15-Minuten-Raster gelegt."""
+def lernfenster(von: datetime, bis: datetime) -> list[tuple[datetime, datetime, tuple[str, ...] | None]]:
+    """Alle Lernfenster zwischen von und bis, auf das 5-Minuten-Raster gelegt."""
     fenster = []
     von = _aufrunden(von)
     tag = von.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -69,7 +70,7 @@ def lernfenster(von: datetime, bis: datetime) -> list[tuple[datetime, datetime, 
 
 
 def _bloecke_teilen(minuten: int) -> list[int]:
-    """90 -> [45, 45], 100 -> [45, 45, 15] (Rest auf 15 min aufgerundet)."""
+    """90 -> [55, 35], 120 -> [55, 55, 10] (Rest auf 5 min aufgerundet)."""
     teile = []
     while minuten > 0:
         dauer = min(BLOCK_MIN, minuten)
@@ -97,7 +98,7 @@ def planen(aufgaben: list[Aufgabe], jetzt: datetime, zeitlimit_s: float = SOLVER
         grenze = a.termin - timedelta(minutes=PUFFER_MIN)
         verfuegbar = sum(
             max(0, (min(e, grenze) - s).total_seconds() / 60)
-            for s, e, f in fenster if f in (None, a.fach))
+            for s, e, f in fenster if f is None or a.fach in f)
         if verfuegbar < a.minuten:
             zu_knapp.append(a.id)
 
@@ -106,6 +107,7 @@ def planen(aufgaben: list[Aufgabe], jetzt: datetime, zeitlimit_s: float = SOLVER
     anzahl_tage = (ende_horizont.date() - t0.date()).days + 1
     tageslast = [[] for _ in range(anzahl_tage)]
     bloecke, starts, intervalle = [], [], []
+    lernbuero_wahl = {}
 
     for a in aufgaben:
         grenze = slot(a.termin - timedelta(minutes=PUFFER_MIN))
@@ -114,8 +116,8 @@ def planen(aufgaben: list[Aufgabe], jetzt: datetime, zeitlimit_s: float = SOLVER
             dauer = dauer_min // SLOT_MIN
             s = m.NewIntVar(0, horizont, f"s_{a.id}_{len(bloecke)}")
             wahl = []
-            for (fs, fe, ff) in fenster:
-                if ff not in (None, a.fach):
+            for wi, (fs, fe, ff) in enumerate(fenster):
+                if ff is not None and a.fach not in ff:
                     continue
                 von, bis = slot(fs), min(slot(fe), grenze)
                 if bis - von < dauer:
@@ -123,6 +125,10 @@ def planen(aufgaben: list[Aufgabe], jetzt: datetime, zeitlimit_s: float = SOLVER
                 p = m.NewBoolVar("")
                 m.Add(s >= von).OnlyEnforceIf(p)
                 m.Add(s + dauer <= bis).OnlyEnforceIf(p)
+                if ff is not None:
+                    if (wi, a.fach) not in lernbuero_wahl:
+                        lernbuero_wahl[(wi, a.fach)] = m.NewBoolVar("")
+                    m.AddImplication(p, lernbuero_wahl[(wi, a.fach)])
                 wahl.append(p)
                 tageslast[(fs.date() - t0.date()).days].append(dauer_min * p)
             if not wahl:
@@ -136,6 +142,8 @@ def planen(aufgaben: list[Aufgabe], jetzt: datetime, zeitlimit_s: float = SOLVER
             bloecke.append((a.id, dauer))
 
     m.AddNoOverlap(intervalle)
+    for wi in {wi for wi, _ in lernbuero_wahl}:
+        m.AddAtMostOne([v for (w, _), v in lernbuero_wahl.items() if w == wi])
     last = []
     for terme in tageslast:
         v = m.NewIntVar(0, 24 * 60, "")

@@ -1,13 +1,14 @@
 """Vorstudie Solver: gemeinsame Szenariodaten fuer CP-SAT (Python) und MiniZinc (Gecode, Chuffed).
 
-Zeitraster: 15 Minuten. Zeitpunkt t = Anzahl 15-Minuten-Schritte ab Montag 00:00.
+Zeitraster: 5 Minuten. Zeitpunkt t = Anzahl 5-Minuten-Schritte ab Montag 00:00.
+Stundenplan: 37 Wochenstunden, davon 8 Lernbuero-Stunden (4 Termine zu je 100 min).
 Ein Lernblock darf nur in einem erlaubten Zeitfenster liegen:
   - freie Zeit (nach dem Unterricht, Wochenende) fuer alle Faecher
-  - Lernbuero-Fenster nur fuer Bloecke des passenden Fachs
+  - Lernbuero-Fenster: mehrere Faecher werden angeboten, pro Stunde wird genau eines gewaehlt
 Unterricht ist dadurch automatisch ausgeschlossen (liegt in keinem Fenster).
 """
-SLOT = 15
-TAG = 24 * 60 // SLOT  # 96 Schritte pro Tag
+SLOT = 5
+TAG = 24 * 60 // SLOT  # 288 Schritte pro Tag
 
 
 def t(tag, hh, mm=0):
@@ -16,27 +17,29 @@ def t(tag, hh, mm=0):
 
 
 FAECHER = ["Mathematik", "Englisch", "Deutsch", "SEW", "ITP"]
-F = {f: i + 1 for i, f in enumerate(FAECHER)}  # 0 = freie Zeit (alle Faecher)
+F = {f: i + 1 for i, f in enumerate(FAECHER)}
+LERNBUERO = frozenset(F.values())
 
 
 def fenster_basis():
-    w = []  # (tag, start, ende, fach) fach=0 -> frei
+    w = []  # (tag, start, ende, faecher) faecher=None -> freie Zeit, sonst angebotene Faecher im Lernbuero
     # Unterricht Mo-Fr bis 15:30 (Fr bis 13:00), danach freie Lernzeit bis 20:00
     for tag in range(5):
         ende_unterricht = t(tag, 13) if tag == 4 else t(tag, 15, 30)
-        w.append((tag, ende_unterricht, t(tag, 20), 0))
-    # Fachgebundene Lernbuero-Stunden waehrend der Schulzeit
-    w.append((0, t(0, 11, 30), t(0, 13, 10), F["Mathematik"]))   # Mo
-    w.append((2, t(2, 11, 30), t(2, 13, 10), F["Englisch"]))     # Mi
-    w.append((3, t(3, 9, 50), t(3, 11, 30), F["SEW"]))           # Do
+        w.append((tag, ende_unterricht, t(tag, 20), None))
+    # Lernbuero-Stunden waehrend der Schulzeit: pro Stunde ein Fach waehlen
+    w.append((0, t(0, 11, 30), t(0, 13, 10), LERNBUERO))   # Mo
+    w.append((1, t(1, 11, 30), t(1, 13, 10), LERNBUERO))   # Di
+    w.append((2, t(2, 11, 30), t(2, 13, 10), LERNBUERO))   # Mi
+    w.append((3, t(3, 9, 50), t(3, 11, 30), LERNBUERO))    # Do
     # Wochenende
     for tag in (5, 6):
-        w.append((tag, t(tag, 9), t(tag, 12), 0))
-        w.append((tag, t(tag, 14), t(tag, 18), 0))
+        w.append((tag, t(tag, 9), t(tag, 12), None))
+        w.append((tag, t(tag, 14), t(tag, 18), None))
     return w
 
 
-def bloecke(aufgaben, blocklaenge_min=45):
+def bloecke(aufgaben, blocklaenge_min=55):
     """aufgaben: (name, fach, minuten, deadline_t) -> Liste von Bloecken (aufgabe_idx, fach, dauer, deadline)"""
     b = []
     d = blocklaenge_min // SLOT

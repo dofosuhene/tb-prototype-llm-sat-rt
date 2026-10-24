@@ -1,61 +1,61 @@
 szenario,solver,lauf,bloecke,status,max_tageslast_min,zeit_s
-A1,OR-Tools CP-SAT (1 Thread),1,14,optimal,135,0.028
-A1,OR-Tools CP-SAT (1 Thread),2,14,optimal,135,0.023
-A1,OR-Tools CP-SAT (1 Thread),3,14,optimal,135,0.026
-A1,OR-Tools CP-SAT (1 Thread),4,14,optimal,135,0.021
-A1,OR-Tools CP-SAT (1 Thread),5,14,optimal,135,0.018
-A1,OR-Tools CP-SAT (2 Threads),1,14,optimal,135,0.025
-A1,OR-Tools CP-SAT (2 Threads),2,14,optimal,135,0.020
-A1,OR-Tools CP-SAT (2 Threads),3,14,optimal,135,0.019
-A1,OR-Tools CP-SAT (2 Threads),4,14,optimal,135,0.020
-A1,OR-Tools CP-SAT (2 Threads),5,14,optimal,135,0.020
-A1,Chuffed (MiniZinc),1,14,optimal,135,0.306
-A1,Chuffed (MiniZinc),2,14,optimal,135,0.088
-A1,Chuffed (MiniZinc),3,14,optimal,135,0.090
-A1,Chuffed (MiniZinc),4,14,optimal,135,0.113
-A1,Chuffed (MiniZinc),5,14,optimal,135,0.105
-A1,Gecode (MiniZinc),1,14,gueltig,135,31.047
-A1,Gecode (MiniZinc),2,14,gueltig,135,30.038
-A1,Gecode (MiniZinc),3,14,gueltig,135,30.031
-A1,Gecode (MiniZinc),4,14,gueltig,135,30.030
-A1,Gecode (MiniZinc),5,14,gueltig,135,30.029
-A2,OR-Tools CP-SAT (1 Thread),1,21,optimal,225,0.035
-A2,OR-Tools CP-SAT (1 Thread),2,21,optimal,225,0.032
-A2,OR-Tools CP-SAT (1 Thread),3,21,optimal,225,0.032
-A2,OR-Tools CP-SAT (1 Thread),4,21,optimal,225,0.031
-A2,OR-Tools CP-SAT (1 Thread),5,21,optimal,225,0.034
-A2,OR-Tools CP-SAT (2 Threads),1,21,optimal,225,0.041
-A2,OR-Tools CP-SAT (2 Threads),2,21,optimal,225,0.053
-A2,OR-Tools CP-SAT (2 Threads),3,21,optimal,225,0.055
-A2,OR-Tools CP-SAT (2 Threads),4,21,optimal,225,0.057
-A2,OR-Tools CP-SAT (2 Threads),5,21,optimal,225,0.058
-A2,Chuffed (MiniZinc),1,21,optimal,225,0.135
-A2,Chuffed (MiniZinc),2,21,optimal,225,0.126
-A2,Chuffed (MiniZinc),3,21,optimal,225,0.138
-A2,Chuffed (MiniZinc),4,21,optimal,225,0.151
-A2,Chuffed (MiniZinc),5,21,optimal,225,0.121
-A2,Gecode (MiniZinc),1,21,gueltig,225,30.031
-A2,Gecode (MiniZinc),2,21,gueltig,225,30.030
-A2,Gecode (MiniZinc),3,21,gueltig,225,30.031
-A2,Gecode (MiniZinc),4,21,gueltig,225,30.030
-A2,Gecode (MiniZinc),5,21,gueltig,225,30.034
-A3,OR-Tools CP-SAT (1 Thread),1,35,unloesbar,,0.003
-A3,OR-Tools CP-SAT (1 Thread),2,35,unloesbar,,0.002
-A3,OR-Tools CP-SAT (1 Thread),3,35,unloesbar,,0.002
-A3,OR-Tools CP-SAT (1 Thread),4,35,unloesbar,,0.002
-A3,OR-Tools CP-SAT (1 Thread),5,35,unloesbar,,0.002
-A3,OR-Tools CP-SAT (2 Threads),1,35,unloesbar,,0.003
-A3,OR-Tools CP-SAT (2 Threads),2,35,unloesbar,,0.002
-A3,OR-Tools CP-SAT (2 Threads),3,35,unloesbar,,0.002
-A3,OR-Tools CP-SAT (2 Threads),4,35,unloesbar,,0.002
-A3,OR-Tools CP-SAT (2 Threads),5,35,unloesbar,,0.002
-A3,Chuffed (MiniZinc),1,35,unloesbar,,0.118
-A3,Chuffed (MiniZinc),2,35,unloesbar,,0.115
-A3,Chuffed (MiniZinc),3,35,unloesbar,,0.124
-A3,Chuffed (MiniZinc),4,35,unloesbar,,0.116
-A3,Chuffed (MiniZinc),5,35,unloesbar,,0.107
-A3,Gecode (MiniZinc),1,35,unloesbar,,0.088
-A3,Gecode (MiniZinc),2,35,unloesbar,,0.090
-A3,Gecode (MiniZinc),3,35,unloesbar,,0.111
-A3,Gecode (MiniZinc),4,35,unloesbar,,0.094
-A3,Gecode (MiniZinc),5,35,unloesbar,,0.092
+A1,OR-Tools CP-SAT (1 Thread),1,14,optimal,165,0.021
+A1,OR-Tools CP-SAT (1 Thread),2,14,optimal,165,0.019
+A1,OR-Tools CP-SAT (1 Thread),3,14,optimal,165,0.019
+A1,OR-Tools CP-SAT (1 Thread),4,14,optimal,165,0.018
+A1,OR-Tools CP-SAT (1 Thread),5,14,optimal,165,0.018
+A1,OR-Tools CP-SAT (2 Threads),1,14,optimal,165,0.023
+A1,OR-Tools CP-SAT (2 Threads),2,14,optimal,165,0.022
+A1,OR-Tools CP-SAT (2 Threads),3,14,optimal,165,0.023
+A1,OR-Tools CP-SAT (2 Threads),4,14,optimal,165,0.022
+A1,OR-Tools CP-SAT (2 Threads),5,14,optimal,165,0.022
+A1,Chuffed (MiniZinc),1,14,optimal,165,0.137
+A1,Chuffed (MiniZinc),2,14,optimal,165,0.129
+A1,Chuffed (MiniZinc),3,14,optimal,165,0.137
+A1,Chuffed (MiniZinc),4,14,optimal,165,0.124
+A1,Chuffed (MiniZinc),5,14,optimal,165,0.125
+A1,Gecode (MiniZinc),1,14,gueltig,165,30.098
+A1,Gecode (MiniZinc),2,14,gueltig,165,30.059
+A1,Gecode (MiniZinc),3,14,gueltig,165,30.054
+A1,Gecode (MiniZinc),4,14,gueltig,165,30.046
+A1,Gecode (MiniZinc),5,14,gueltig,165,30.046
+A2,OR-Tools CP-SAT (1 Thread),1,19,optimal,220,0.054
+A2,OR-Tools CP-SAT (1 Thread),2,19,optimal,220,0.027
+A2,OR-Tools CP-SAT (1 Thread),3,19,optimal,220,0.026
+A2,OR-Tools CP-SAT (1 Thread),4,19,optimal,220,0.026
+A2,OR-Tools CP-SAT (1 Thread),5,19,optimal,220,0.027
+A2,OR-Tools CP-SAT (2 Threads),1,19,optimal,220,0.028
+A2,OR-Tools CP-SAT (2 Threads),2,19,optimal,220,0.026
+A2,OR-Tools CP-SAT (2 Threads),3,19,optimal,220,0.026
+A2,OR-Tools CP-SAT (2 Threads),4,19,optimal,220,0.027
+A2,OR-Tools CP-SAT (2 Threads),5,19,optimal,220,0.027
+A2,Chuffed (MiniZinc),1,19,optimal,220,0.163
+A2,Chuffed (MiniZinc),2,19,optimal,220,0.144
+A2,Chuffed (MiniZinc),3,19,optimal,220,0.139
+A2,Chuffed (MiniZinc),4,19,optimal,220,0.140
+A2,Chuffed (MiniZinc),5,19,optimal,220,0.139
+A2,Gecode (MiniZinc),1,19,gueltig,220,30.048
+A2,Gecode (MiniZinc),2,19,gueltig,220,30.044
+A2,Gecode (MiniZinc),3,19,gueltig,220,30.045
+A2,Gecode (MiniZinc),4,19,gueltig,220,30.051
+A2,Gecode (MiniZinc),5,19,gueltig,220,30.047
+A3,OR-Tools CP-SAT (1 Thread),1,30,unloesbar,,0.004
+A3,OR-Tools CP-SAT (1 Thread),2,30,unloesbar,,0.003
+A3,OR-Tools CP-SAT (1 Thread),3,30,unloesbar,,0.003
+A3,OR-Tools CP-SAT (1 Thread),4,30,unloesbar,,0.003
+A3,OR-Tools CP-SAT (1 Thread),5,30,unloesbar,,0.003
+A3,OR-Tools CP-SAT (2 Threads),1,30,unloesbar,,0.004
+A3,OR-Tools CP-SAT (2 Threads),2,30,unloesbar,,0.003
+A3,OR-Tools CP-SAT (2 Threads),3,30,unloesbar,,0.004
+A3,OR-Tools CP-SAT (2 Threads),4,30,unloesbar,,0.003
+A3,OR-Tools CP-SAT (2 Threads),5,30,unloesbar,,0.007
+A3,Chuffed (MiniZinc),1,30,unloesbar,,0.159
+A3,Chuffed (MiniZinc),2,30,unloesbar,,0.160
+A3,Chuffed (MiniZinc),3,30,unloesbar,,0.155
+A3,Chuffed (MiniZinc),4,30,unloesbar,,0.154
+A3,Chuffed (MiniZinc),5,30,unloesbar,,0.150
+A3,Gecode (MiniZinc),1,30,unloesbar,,0.206
+A3,Gecode (MiniZinc),2,30,unloesbar,,0.159
+A3,Gecode (MiniZinc),3,30,unloesbar,,0.169
+A3,Gecode (MiniZinc),4,30,unloesbar,,0.160
+A3,Gecode (MiniZinc),5,30,unloesbar,,0.171

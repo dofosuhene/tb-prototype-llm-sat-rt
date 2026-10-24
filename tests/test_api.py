@@ -39,7 +39,7 @@ def test_readiness_nach_erledigtem_block(client):
     z = client.get("/zustand").json()
     client.post(f"/lernbloecke/{z['bloecke'][0]['id']}/erledigt")
     r = client.get("/readiness").json()[0]
-    assert r["erledigt_min"] == 45 and r["score"] == 0.5
+    assert r["erledigt_min"] == 55 and r["score"] == 0.61
 
 
 def test_neuplanung_behaelt_erledigte_bloecke(client):

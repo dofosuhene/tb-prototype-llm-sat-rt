@@ -31,13 +31,13 @@ from openai import AsyncOpenAI
 from .llm import ANBIETER, ANWEISUNG, SCHEMA, TESTSET
 
 HIER = Path(__file__).parent
-KURZ = {"groq": "Groq", "gemini": "Gemini", "mistral": "Mistral", "ollama": "Ollama (lokal)", "openai": "OpenAI"}
+KURZ = {"groq": "Groq", "ollama": "Ollama (lokal)", "vllm": "vLLM"}
 
 
 def client_fuer(name: str, zeitlimit: float):
     key_env, model_env, base = ANBIETER[name]
     key, model = os.environ.get(key_env), os.environ.get(model_env)
-    if name.startswith("Ollama") and model and not key:
+    if name.startswith(("Ollama", "vLLM")) and model and not key:
         key = "ollama"
     if os.environ.get("LAST_BASE_URL"):          # nur fuer eigene Tests mit einem Ersatz-Server
         base = os.environ["LAST_BASE_URL"]

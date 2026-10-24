@@ -1,8 +1,8 @@
 """Einstellungen des Prototyps an einer Stelle. Spaeter kommen diese Werte aus der Datenbank (Onboarding)."""
 import os
 
-SLOT_MIN = 15
-BLOCK_MIN = 45
+SLOT_MIN = 5
+BLOCK_MIN = 55
 PUFFER_MIN = 60
 SOLVER_ZEITLIMIT_S = 5.0
 
@@ -11,11 +11,13 @@ LERNMINUTEN = {"Aufgabe": 90, "Pruefung": 180}
 FAELLIG_UM = (8, 0)
 
 
+LERNBUERO_FAECHER = ("Mathematik", "Englisch", "Deutsch", "SEW", "ITP")
+
 WOCHENPLAN = {
-    0: [("15:30", "20:00", None), ("11:30", "13:10", "Mathematik")],
-    1: [("15:30", "20:00", None)],
-    2: [("15:30", "20:00", None), ("11:30", "13:10", "Englisch")],
-    3: [("15:30", "20:00", None), ("09:50", "11:30", "SEW")],
+    0: [("15:30", "20:00", None), ("11:30", "13:10", LERNBUERO_FAECHER)],
+    1: [("15:30", "20:00", None), ("11:30", "13:10", LERNBUERO_FAECHER)],
+    2: [("15:30", "20:00", None), ("11:30", "13:10", LERNBUERO_FAECHER)],
+    3: [("15:30", "20:00", None), ("09:50", "11:30", LERNBUERO_FAECHER)],
     4: [("13:00", "20:00", None)],
     5: [("09:00", "12:00", None), ("14:00", "18:00", None)],
     6: [("09:00", "12:00", None), ("14:00", "18:00", None)],

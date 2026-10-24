@@ -4,8 +4,6 @@ Alle Anbieter werden ueber die OpenAI-kompatible Schnittstelle mit demselben JSO
 angesprochen. Getestet werden nur Anbieter, fuer die Schluessel und Modell gesetzt sind.
 
   export GROQ_API_KEY=...     GROQ_MODEL=...      (kostenloser Tarif, console.groq.com)
-  export GEMINI_API_KEY=...   GEMINI_MODEL=...    (kostenloser Tarif, aistudio.google.com)
-  export MISTRAL_API_KEY=...  MISTRAL_MODEL=...   (kostenloser Tarif "Experiment", console.mistral.ai)
   export OLLAMA_MODEL=...                         (lokal und kostenlos, ollama.com, z. B. qwen3:8b)
   export OPENAI_API_KEY=...   OPENAI_MODEL=...    (optional, kostenpflichtig)
 
@@ -17,6 +15,7 @@ import csv
 import json
 import os
 import statistics
+import sys
 import time
 from pathlib import Path
 from typing import Literal, Optional
@@ -67,10 +66,8 @@ TESTSET = [
 
 ANBIETER = {
     "Groq": ("GROQ_API_KEY", "GROQ_MODEL", "https://api.groq.com/openai/v1"),
-    "Gemini": ("GEMINI_API_KEY", "GEMINI_MODEL", "https://generativelanguage.googleapis.com/v1beta/openai/"),
-    "Mistral": ("MISTRAL_API_KEY", "MISTRAL_MODEL", "https://api.mistral.ai/v1"),
     "Ollama (lokal)": ("OLLAMA_API_KEY", "OLLAMA_MODEL", "http://localhost:11434/v1"),
-    "OpenAI": ("OPENAI_API_KEY", "OPENAI_MODEL", None),
+    "vLLM": ("VLLM_API_KEY", "VLLM_MODEL", os.environ.get("VLLM_BASE_URL") or "http://localhost:8001/v1"),
 }
 
 SCHEMA = {
@@ -84,7 +81,7 @@ SCHEMA = {
             "subject": {"type": ["string", "null"]},
             "title": {"type": ["string", "null"]},
             "raw_date_expression": {"type": ["string", "null"]},
-            "missing_fields": {"type": "array", "items": {"type": "string"}},
+            "missing_fields": {"type": "array", "items": {"type": "string", "enum": ["fach", "typ", "termin"]}},
         }}},
 }
 
@@ -103,7 +100,7 @@ def bewerte(e: Eintrag, erw):
 
 
 # Machbarkeitsstudie, Tabelle Nutzwertanalyse LLM: Summe aus K1, K2, K4, K5 (gewichtet), K3 hat 30 %
-NUTZWERT_OHNE_K3 = {"Groq": 2.80, "Mistral": 2.65, "Ollama (lokal)": 3.05}
+NUTZWERT_OHNE_K3 = {"Groq": 2.80, "Ollama (lokal)": 3.25}
 
 
 def k3_punkte(richtig_prozent: float, median_s: float) -> int:
@@ -119,9 +116,12 @@ def k3_punkte(richtig_prozent: float, median_s: float) -> int:
 
 def main():
     rows = []
+    auswahl = [a.lower() for a in sys.argv[1:]]
     for name, (key_env, model_env, base) in ANBIETER.items():
+        if auswahl and name.split()[0].lower() not in auswahl:
+            continue
         key, model = os.environ.get(key_env), os.environ.get(model_env)
-        if name.startswith("Ollama") and model and not key:
+        if name.startswith(("Ollama", "vLLM")) and model and not key:
             key = "ollama"  # Ollama braucht keinen echten Schluessel
         if not key or not model:
             print(f"{name}: uebersprungen ({key_env}/{model_env} nicht gesetzt)")
@@ -129,12 +129,13 @@ def main():
         client = OpenAI(api_key=key, base_url=base) if base else OpenAI(api_key=key)
         for text, *erw in TESTSET:
             t0 = time.perf_counter()
-            schema_ok, rel_ok, felder_ok, rueck_ok, fehler = False, False, False, False, ""
+            schema_ok, rel_ok, felder_ok, rueck_ok, fehler, antwort = False, False, False, False, "", ""
             try:
                 r = client.chat.completions.create(
                     model=model, response_format=SCHEMA,
                     messages=[{"role": "system", "content": ANWEISUNG}, {"role": "user", "content": text}])
-                e = Eintrag.model_validate(json.loads(r.choices[0].message.content))
+                antwort = r.choices[0].message.content
+                e = Eintrag.model_validate(json.loads(antwort))
                 schema_ok = True
                 rel_ok, felder_ok, rueck_ok = bewerte(e, erw)
             except (ValidationError, json.JSONDecodeError) as ex:
@@ -142,14 +143,15 @@ def main():
             except Exception as ex:  # API-Fehler, Rate-Limit usw.
                 fehler = f"{type(ex).__name__}: {ex}"[:120]
             dt = time.perf_counter() - t0
-            rows.append([name, model, text, schema_ok, rel_ok, felder_ok, rueck_ok, f"{dt:.2f}", fehler])
-            print(rows[-1], flush=True)
+            rows.append([name, model, text, schema_ok, rel_ok, felder_ok, rueck_ok, f"{dt:.2f}", fehler, antwort])
+            print(rows[-1][:-1], flush=True)
             if not name.startswith("Ollama"):
                 time.sleep(2.5)  # Rate-Limits der Gratis-Tarife schonen
-    with open(Path(__file__).parent / "ergebnisse_llm.csv", "w", newline="", encoding="utf-8") as fh:
+    datei = Path(__file__).parent / ("ergebnisse_llm" + "".join("_" + a for a in auswahl) + ".csv")
+    with open(datei, "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["anbieter", "modell", "nachricht", "schema_gueltig", "relevanz_richtig",
-                    "felder_richtig", "fehlende_angaben_erkannt", "zeit_s", "fehler"])
+                    "felder_richtig", "fehlende_angaben_erkannt", "zeit_s", "fehler", "antwort"])
         w.writerows(rows)
     print("\nZusammenfassung (Anteil richtig, Median-Antwortzeit):")
     for name in ANBIETER:

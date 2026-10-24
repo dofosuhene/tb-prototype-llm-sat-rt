@@ -13,7 +13,7 @@ from pathlib import Path
 from minizinc import Instance, Model, Solver, Status
 from ortools.sat.python import cp_model
 
-from .szenarien import PUFFER, SZENARIEN, TAG, bloecke, fenster_basis
+from .szenarien import PUFFER, SLOT, SZENARIEN, TAG, bloecke, fenster_basis
 
 ZEITLIMIT_S = 30
 HIER = Path(__file__).parent
@@ -30,11 +30,12 @@ def cpsat(aufgaben, worker):
     m = cp_model.CpModel()
     horizon = 7 * TAG
     starts, intervals, day_terms = [], [], {d: [] for d in range(7)}
+    wahl = {}
     for bi, (task, fach, dauer, dl) in enumerate(b):
         s = m.NewIntVar(0, horizon, f"s{bi}")
         lits = []
         for wi, (tag, ws, we, wf) in enumerate(w):
-            if wf not in (0, fach):
+            if wf is not None and fach not in wf:
                 continue
             ende = min(we, dl - PUFFER)
             if ende - ws < dauer:
@@ -44,6 +45,10 @@ def cpsat(aufgaben, worker):
             m.Add(s + dauer <= ende).OnlyEnforceIf(p)
             lits.append(p)
             day_terms[tag].append(dauer * p)
+            if wf is not None:
+                if (wi, fach) not in wahl:
+                    wahl[(wi, fach)] = m.NewBoolVar(f"lb{wi}_{fach}")
+                m.AddImplication(p, wahl[(wi, fach)])
         if not lits:
             m.AddBoolOr([])  # kein Fenster moeglich -> unloesbar
         else:
@@ -51,6 +56,8 @@ def cpsat(aufgaben, worker):
         starts.append(s)
         intervals.append(m.NewIntervalVar(s, dauer, s + dauer, f"i{bi}"))
     m.AddNoOverlap(intervals)
+    for wi in {wi for wi, _ in wahl}:
+        m.AddAtMostOne([v for (x, _), v in wahl.items() if x == wi])
     for bi in range(len(b) - 1):
         if b[bi][0] == b[bi + 1][0]:
             m.Add(starts[bi] <= starts[bi + 1])
@@ -82,7 +89,8 @@ def mzn(aufgaben, solver_name):
     inst["wday"] = [x[0] for x in w]
     inst["wstart"] = [x[1] for x in w]
     inst["wend"] = [x[2] for x in w]
-    inst["wfach"] = [x[3] for x in w]
+    inst["wlb"] = [x[3] is not None for x in w]
+    inst["wfaecher"] = [set(x[3]) if x[3] is not None else set() for x in w]
     inst["nB"] = len(b)
     inst["btask"] = [x[0] for x in b]
     inst["bfach"] = [x[1] for x in b]
@@ -113,8 +121,7 @@ def main():
         for name, f in laeufe:
             for i in range(n):
                 status, obj, dt, nb = f(aufgaben)
-                # Zielwert in Minuten (Schritte * 15)
-                rows.append([sz, name, i + 1, nb, status, "" if obj is None else int(obj) * 15, f"{dt:.3f}"])
+                rows.append([sz, name, i + 1, nb, status, "" if obj is None else int(obj) * SLOT, f"{dt:.3f}"])
                 print(rows[-1], flush=True)
     with open(HIER / "ergebnisse_solver.csv", "w", newline="", encoding="utf-8") as fh:
         wr = csv.writer(fh)

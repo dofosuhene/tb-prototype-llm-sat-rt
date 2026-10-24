@@ -57,15 +57,13 @@ Alle Skripte im Ordner `taskbuddy-prototyp` starten. Ergebnisse landen als CSV i
 | Skript | Vergleicht | Voraussetzung | Ergebnis |
 |---|---|---|---|
 | `python -m vergleich.solver 5` | OR-Tools CP-SAT, Chuffed, Gecode (3 Szenarien, 5 Wiederholungen, 30 s Limit) | MiniZinc-Bundle installiert (`minizinc --solvers`) | `ergebnisse_solver.csv` |
-| `python -m vergleich.llm` | Groq, Gemini, Mistral, Ollama lokal (optional OpenAI) mit 20 Testnachrichten | je Anbieter `*_API_KEY` und `*_MODEL` gesetzt | `ergebnisse_llm.csv` |
+| `python -m vergleich.llm` | Groq und Ollama lokal mit 20 Testnachrichten | je Anbieter `*_API_KEY` und `*_MODEL` gesetzt | `ergebnisse_llm.csv` |
 | `python -m vergleich.last groq --anfragen 60 --parallel 10` | Lasttest eines Anbieters: ab wann greift die Grenze, Tokens pro Anfrage, Hochrechnung für 50, 500 und 1000 Nutzer | wie beim LLM-Vergleich, optional `--tpm --tpd --rpm --rpd` aus dem eigenen Konto | `ergebnisse_last_<anbieter>.csv` |
 | `python -m vergleich.echtzeit 200` | WebSocket, SSE, Socket.IO (Verbindungsaufbau, Latenz, Verluste) | keine | `ergebnisse_echtzeit.csv` |
 
 Umgebungsvariablen für den Sprachmodell-Vergleich (nur gesetzte Anbieter werden getestet):
 ```bash
 export GROQ_API_KEY=...     GROQ_MODEL=openai/gpt-oss-20b
-export GEMINI_API_KEY=...   GEMINI_MODEL=gemini-2.5-flash
-export MISTRAL_API_KEY=...  MISTRAL_MODEL=mistral-small-latest
 export OLLAMA_MODEL=qwen3:8b            # vorher: ollama pull qwen3:8b
 ```
 Modellnamen ändern sich. Vor dem Lauf in der Doku des Anbieters prüfen.

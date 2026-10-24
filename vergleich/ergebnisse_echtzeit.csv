@@ -1,10 +1,4 @@
-lauf,weg,gesendet,empfangen,verloren,aufbau_ms,latenz_median_ms,latenz_p95_ms
-1,WebSocket,200,200,0,86.4,1.75,2.10
-1,SSE,200,200,0,75.3,1.92,2.37
-1,Socket.IO,200,200,0,90.5,2.76,3.74
-2,WebSocket,200,200,0,94.2,1.73,2.55
-2,SSE,200,200,0,82.0,1.90,2.74
-2,Socket.IO,200,200,0,98.9,2.76,4.14
-3,WebSocket,200,200,0,79.4,1.80,2.31
-3,SSE,200,200,0,68.8,1.98,2.48
-3,Socket.IO,200,200,0,82.8,2.83,4.55
+weg,gesendet,empfangen,verloren,aufbau_ms,latenz_median_ms,latenz_p95_ms
+WebSocket,200,200,0,33.9,0.92,2.43
+SSE,200,200,0,26.8,1.03,2.68
+Socket.IO,200,200,0,43.2,1.17,3.39
