@@ -1,4 +1,5 @@
 # TaskBuddy – Backend-Prototyp (Machbarkeitsstudie)
+**Test Hardware: MacBook Pro - Apple M1 Pro, 8-Core CPU, 14-Core GPU**
 
 Freitext → Sprachmodell (Structured Outputs) → SQLite → CP-SAT → WebSocket / SSE / Socket.IO → Browser.
 
@@ -77,6 +78,3 @@ Nur die Testnachrichten aus `vergleich/llm.py` verwenden, keine echten Schülerd
 - Ziel: höchste Tageslast minimal, dann früh lernen. Puffer 60 min vor Termin.
 - Neuplanung behält erledigte Blöcke. Unlösbar → alter Plan bleibt.
 - Readiness = erledigte ÷ geplante Lernminuten.
-
-## Bewusst nicht enthalten
-SSO/Login, finales DB-Schema/Alembic, Exam-Mode, Erinnerungen, echtes Frontend.
